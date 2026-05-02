@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Street Smart Guide | The Welfare of Stray Dogs</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: #fff; color: #1a1a1a; }
+
+  /* ── EMBED WIDGET (this is what sits on the WSD site) ── */
+  .wsd-widget {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    background: #F5A800;
+    border-radius: 14px;
+    padding: 18px 24px;
+    cursor: pointer;
+    border: none;
+    font-family: 'Nunito', sans-serif;
+    text-decoration: none;
+    transition: transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 4px 0 #c98900;
+  }
+  .wsd-widget:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #c98900; }
+  .wsd-widget .w-icon { font-size: 2rem; }
+  .wsd-widget .w-text .w-title { font-size: 1rem; font-weight: 900; color: #1a1a1a; display: block; }
+  .wsd-widget .w-text .w-sub { font-size: 0.78rem; font-weight: 700; color: #1a1a1a; opacity: 0.65; display: block; margin-top: 2px; }
+  .wsd-widget .w-arrow { font-size: 1.1rem; color: #1a1a1a; opacity: 0.5; margin-left: 8px; }
+
+  /* ── OVERLAY ── */
+  .wsd-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 24px 16px 48px;
+  }
+  .wsd-overlay.open { display: block; }
+
+  .wsd-modal {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 720px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  /* modal header */
+  .wsd-modal-header {
+    background: #1a1a1a;
+    padding: 28px 32px 24px;
+    position: relative;
+  }
+  .wsd-modal-header .close-btn {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: #2e2e2e;
+    border: none;
+    color: #aaa;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: background 0.15s;
+  }
+  .wsd-modal-header .close-btn:hover { background: #444; color: #fff; }
+  .wsd-modal-header .tag {
+    display: inline-block;
+    background: #F5A800;
+    color: #1a1a1a;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 50px;
+    margin-bottom: 12px;
+  }
+  .wsd-modal-header h2 { font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 8px; }
+  .wsd-modal-header p { font-size: 0.87rem; color: #aaa; line-height: 1.65; max-width: 500px; }
+  .wsd-modal-header .stat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .wsd-modal-header .stat-chip {
+    background: #2e2e2e;
+    color: #F5A800;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 50px;
+  }
+
+  /* tabs */
+  .wsd-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #f0f0f0;
+    background: #fff;
+    padding: 0 32px;
+  }
+  .wtab {
+    flex: 1;
+    padding: 16px 8px;
+    border: none;
+    background: none;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #aaa;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.18s;
+  }
+  .wtab .ti { display: block; font-size: 1.3rem; margin-bottom: 3px; }
+  .wtab.kids-active { color: #1a1a1a; border-bottom-color: #F5A800; }
+  .wtab.seniors-active { color: #1a1a1a; border-bottom-color: #7B4F2E; }
+
+  /* panels */
+  .wsd-panel { display: none; padding: 28px 32px 32px; }
+  .wsd-panel.active { display: block; }
+
+  /* score bar */
+  .sbar {
+    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 12px; padding: 12px 18px; margin-bottom: 22px; flex-wrap: wrap; gap: 6px;
+  }
+  .sbar.kb { background: #F5A800; }
+  .sbar.sb { background: #7B4F2E; }
+  .sbar .sl { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; opacity: 0.65; }
+  .sbar.kb .sl { color: #1a1a1a; } .sbar.sb .sl { color: #f5c89a; }
+  .sbar .sv { font-size: 1.5rem; font-weight: 900; }
+  .sbar.kb .sv { color: #1a1a1a; } .sbar.sb .sv { color: #fff; }
+  .sbar .st { font-size: 0.85rem; font-weight: 800; }
+  .sbar.kb .st { color: #1a1a1a; } .sbar.sb .st { color: #fff; }
+
+  /* intro */
+  .pintro { background: #f7f7f7; border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; }
+  .pintro h3 { font-size: 0.97rem; font-weight: 900; color: #1a1a1a; margin-bottom: 5px; }
+  .pintro p { font-size: 0.85rem; color: #555; line-height: 1.65; }
+
+  /* section labels */
+  .slabel { display: flex; align-items: center; gap: 10px; margin: 20px 0 12px; }
+  .sbadge { font-size: 0.67rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 3px 11px; border-radius: 50px; white-space: nowrap; }
+  .sbadge.d { background: #ffe8e8; color: #c0392b; }
+  .sbadge.c { background: #fff3d4; color: #8a5e00; }
+  .sbadge.s { background: #e4f8ed; color: #1a6636; }
+  .sline { flex: 1; height: 1.5px; background: #ebebeb; }
+
+  /* cards */
+  .gcard {
+    border: 1.5px solid #ebebeb;
+    border-radius: 14px; margin-bottom: 10px;
+    background: #fff; overflow: hidden; cursor: pointer;
+    transition: box-shadow 0.18s, transform 0.18s;
+  }
+  .gcard:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .gcard.dc { border-color: #ffd6d6; } .gcard.cc { border-color: #ffe4a0; } .gcard.sc { border-color: #b8eecb; }
+
+  .gc-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .gc-ico { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .di { background: #fff0f0; } .ci { background: #fff8e4; } .si { background: #edfbf3; }
+  .gc-title { font-weight: 800; font-size: 0.92rem; color: #1a1a1a; line-height: 1.25; }
+  .gc-sub { font-size: 0.72rem; color: #999; font-weight: 600; margin-top: 2px; }
+  .gc-arr { margin-left: auto; font-size: 0.75rem; color: #bbb; transition: transform 0.2s; flex-shrink: 0; }
+  .gcard.open .gc-arr { transform: rotate(180deg); }
+
+  .gc-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .gcard.open .gc-body { max-height: 460px; }
+  .gc-inner { padding: 0 16px 16px; }
+
+  .sbox { background: #f7f7f7; border-radius: 9px; padding: 12px 13px; font-size: 0.84rem; line-height: 1.65; margin-bottom: 9px; color: #333; }
+  .sbox .lb { display: block; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #bbb; margin-bottom: 4px; }
+
+  .oc { display: flex; align-items: flex-start; gap: 7px; padding: 9px 12px; border-radius: 9px; font-size: 0.83rem; font-weight: 700; line-height: 1.5; margin-bottom: 7px; }
+  .oc.bad { background: #fff0f0; color: #b22222; }
+  .oc.good { background: #edfbf3; color: #1a6636; }
+  .oc.tip { background: #fffbe4; color: #7a5a00; }
+  .oc .oi { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+
+  .pchip { display: inline-flex; align-items: center; background: #F5A800; color: #1a1a1a; font-size: 0.74rem; font-weight: 800; padding: 3px 11px; border-radius: 50px; margin-top: 4px; }
+
+  /* rules grid */
+  .rgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-top: 6px; }
+  .rtile { background: #f7f7f7; border-radius: 12px; padding: 14px 10px; text-align: center; }
+  .rtile .ri { font-size: 1.4rem; margin-bottom: 6px; }
+  .rtile .rt { font-size: 0.74rem; font-weight: 800; color: #333; line-height: 1.4; }
+
+  /* quiz */
+  .qwrap { background: #1a1a1a; border-radius: 14px; padding: 22px; margin-top: 24px; }
+  .qwrap h3 { font-size: 0.97rem; font-weight: 900; color: #F5A800; margin-bottom: 3px; }
+  .qsub { font-size: 0.78rem; color: #888; margin-bottom: 16px; }
+  .qq { background: #242424; border-radius: 11px; padding: 14px; margin-bottom: 10px; }
+  .qqt { font-size: 0.87rem; font-weight: 700; color: #fff; margin-bottom: 10px; line-height: 1.5; }
+  .qopts { display: flex; flex-direction: column; gap: 6px; }
+  .qo { background: #2e2e2e; border: 1.5px solid transparent; border-radius: 8px; padding: 9px 12px; color: #ccc; font-size: 0.83rem; font-weight: 600; font-family: 'Nunito', sans-serif; cursor: pointer; text-align: left; transition: all 0.15s; }
+  .qo:hover:not(:disabled) { border-color: #F5A800; color: #fff; }
+  .qo.correct { background: #1a3228; border-color: #3dbe6e; color: #7ee8a2; }
+  .qo.wrong { background: #321a1a; border-color: #e84040; color: #e87e7e; }
+  .qo:disabled { cursor: not-allowed; }
+  .qfb { margin-top: 8px; font-size: 0.8rem; font-weight: 700; padding: 7px 10px; border-radius: 7px; display: none; line-height: 1.5; }
+  .qfb.show { display: block; }
+  .qfb.good { background: #1a3228; color: #7ee8a2; }
+  .qfb.bad { background: #321a1a; color: #e87e7e; }
+
+  /* helpline */
+  .hstrip { background: #F5A800; border-radius: 13px; padding: 16px 20px; margin-top: 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .hstrip .hi { font-size: 1.4rem; }
+  .hstrip .ht { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; opacity: 0.6; }
+  .hstrip .hn { font-size: 0.97rem; font-weight: 900; color: #1a1a1a; }
+  .hstrip .htime { font-size: 0.74rem; font-weight: 700; color: #1a1a1a; opacity: 0.65; }
+
+  @media (max-width: 500px) {
+    .wsd-panel { padding: 20px 18px 24px; }
+    .rgrid { grid-template-columns: 1fr 1fr; }
+    .wsd-tabs { padding: 0 18px; }
+    .wsd-modal-header { padding: 22px 20px 18px; }
+    .wsd-modal-header h2 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body style="padding: 60px 24px; background: #f5f5f5;">
+
+<!-- ============================================================
+  STEP 1: Place this button/banner anywhere on the WSD site
+  ============================================================ -->
+<p style="font-size:0.8rem; color:#999; font-family:sans-serif; margin-bottom:10px;">↓ This button sits on the WSD site</p>
+
+<button class="wsd-widget" onclick="document.getElementById('wsd-guide-overlay').classList.add('open')">
+  <span class="w-icon">🐾</span>
+  <span class="w-text">
+    <span class="w-title">Street Smart Guide</span>
+    <span class="w-sub">How to stay safe around street dogs</span>
+  </span>
+  <span class="w-arrow">→</span>
+</button>
+
+<!-- ============================================================
+  STEP 2: Place this overlay anywhere in the page body
+  ============================================================ -->
+<div class="wsd-overlay" id="wsd-guide-overlay">
+  <div class="wsd-modal">
+
+    <div class="wsd-modal-header">
+      <button class="close-btn" onclick="document.getElementById('wsd-guide-overlay').classList.remove('open')">✕</button>
+      <span class="tag">WSD Community Guide</span>
+      <h2>How to Be Around Street Dogs Safely</h2>
+      <p>Most bites in Mumbai happen because of small, avoidable mistakes. Learn what triggers a dog and what to do so both you and the dog stay safe.</p>
+      <div class="stat-row">
+        <span class="stat-chip">🐾 56,500 sterilised</span>
+        <span class="stat-chip">💉 20,000+ vaccinated</span>
+        <span class="stat-chip">❤ Since 1994</span>
+      </div>
+    </div>
+
+    <div class="wsd-tabs">
+      <button class="wtab kids-active" id="tab-kids" onclick="wsdSw('kids')"><span class="ti">🧒</span>For Kids</button>
+      <button class="wtab" id="tab-seniors" onclick="wsdSw('seniors')"><span class="ti">🧓</span>For Senior Citizens</button>
+    </div>
+
+    <!-- KIDS -->
+    <div class="wsd-panel active" id="panel-kids">
+
+      <div class="sbar kb">
+        <div><div class="sl">Score</div><div class="sv" id="k-score">0</div></div>
+        <div style="text-align:right"><div class="sl">Rank</div><div class="st" id="k-rank">Rookie Paw Pal 🐾</div></div>
+      </div>
+
+      <div class="pintro">
+        <h3>Hey there, Street Smart Champ!</h3>
+        <p>Street dogs mostly want to rest and eat in peace. But how you act around them matters a lot. Read each situation, learn the right move, and earn points as you go.</p>
+      </div>
+
+      <div class="slabel"><span class="sbadge d">Watch Out</span><div class="sline"></div></div>
+
+      <div class="gcard dc" onclick="gTog(this,'kids',-10)">
+        <div class="gc-head"><div class="gc-ico di">🍪</div><div><div class="gc-title">Teasing a Dog with Food</div><div class="gc-sub">The biscuit wave trap</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>You hold out a biscuit, the dog walks toward you, then you snatch it back or run away. The dog feels tricked and unsafe. A dog that feels unsafe may growl or snap.</div>
+          <div class="oc bad"><span class="oi">🚨</span>The dog bites your hand. You go to hospital. Nobody wins.</div>
+          <div class="oc tip"><span class="oi">💡</span>Place food on the ground and step back. Let the dog come to it on its own.</div>
+        </div></div>
+      </div>
+
+      <div class="gcard dc" onclick="gTog(this,'kids',-10)">
+        <div class="gc-head"><div class="gc-ico di">😤</div><div><div class="gc-title">Running Toward or Chasing a Dog</div><div class="gc-sub">The chase game gone wrong</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>You run toward a sleeping dog screaming to startle it for fun. The dog wakes up scared and confused. A scared dog either runs or bites.</div>
+          <div class="oc bad"><span class="oi">🚨</span>The dog bites one of your friends on the leg before running away.</div>
+          <div class="oc tip"><span class="oi">💡</span>If you see a sleeping dog, walk around it quietly. Never shout at or run toward a resting dog.</div>
+        </div></div>
+      </div>
+
+      <div class="gcard dc" onclick="gTog(this,'kids',-10)">
+        <div class="gc-head"><div class="gc-ico di">🥩</div><div><div class="gc-title">Going Near a Dog That is Eating</div><div class="gc-sub">The mealtime mistake</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>A street dog is eating near a bin. You walk up and try to pet it. Even calm dogs snap when they feel their food is being taken.</div>
+          <div class="oc bad"><span class="oi">🚨</span>The dog growls and bites your hand.</div>
+          <div class="oc tip"><span class="oi">💡</span>Never go near a dog that is eating, chewing, or drinking. Wait until it walks away on its own.</div>
+        </div></div>
+      </div>
+
+      <div class="slabel"><span class="sbadge c">Be Careful</span><div class="sline"></div></div>
+
+      <div class="gcard cc" onclick="gTog(this,'kids',0)">
+        <div class="gc-head"><div class="gc-ico ci">👀</div><div><div class="gc-title">Staring Into a Dog's Eyes</div><div class="gc-sub">The eye contact challenge</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>You stare straight into a street dog's eyes for a long time. In dog language, a long hard stare is a challenge or threat.</div>
+          <div class="oc bad"><span class="oi">⚠</span>The dog reads this as you picking a fight. It may bark, chase, or bite.</div>
+          <div class="oc tip"><span class="oi">💡</span>Look away slowly and turn your body slightly to the side.</div>
+        </div></div>
+      </div>
+
+      <div class="gcard cc" onclick="gTog(this,'kids',0)">
+        <div class="gc-head"><div class="gc-ico ci">🌙</div><div><div class="gc-title">Walking Alone Past Dogs at Night</div><div class="gc-sub">The late night walk</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>At night, street dogs are more active and protective of their area. A group may bark and follow you if you walk through a lane alone.</div>
+          <div class="oc bad"><span class="oi">⚠</span>You panic and run. Running always makes it worse.</div>
+          <div class="oc tip"><span class="oi">💡</span>Walk slowly and steadily. Stand still for a few seconds if they approach, then move away calmly.</div>
+        </div></div>
+      </div>
+
+      <div class="slabel"><span class="sbadge s">Smart Moves</span><div class="sline"></div></div>
+
+      <div class="gcard sc" onclick="gTog(this,'kids',20)">
+        <div class="gc-head"><div class="gc-ico si">🤲</div><div><div class="gc-title">How to Greet a Street Dog Properly</div><div class="gc-sub">The right way to say hello</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">The right approach</span>Crouch to one side, not directly facing the dog. Extend your hand low, palm down. Let the dog sniff you first. If it wags and comes closer, pet under its chin or chest. Never reach over its head straight away.</div>
+          <div class="oc good"><span class="oi">✅</span>The dog sniffs you, wags, and accepts your touch. A calm happy moment for both.</div>
+          <div class="pchip">+20 points earned</div>
+        </div></div>
+      </div>
+
+      <div class="gcard sc" onclick="gTog(this,'kids',20)">
+        <div class="gc-head"><div class="gc-ico si">🧍</div><div><div class="gc-title">If a Dog Charges at You</div><div class="gc-sub">The freeze rule</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What to do</span>Stop moving immediately. Stand still like a tree. Cross your arms. Look away. Most dogs will slow down and walk off when you stop reacting.</div>
+          <div class="oc good"><span class="oi">✅</span>You stand still. The dog barks once, then walks away. You are safe.</div>
+          <div class="pchip">+20 points earned</div>
+        </div></div>
+      </div>
+
+      <div class="slabel"><span class="sbadge s">Golden Rules</span><div class="sline"></div></div>
+      <div class="rgrid">
+        <div class="rtile"><div class="ri">🤫</div><div class="rt">Never scream near a dog</div></div>
+        <div class="rtile"><div class="ri">🏃</div><div class="rt">Never run from a barking dog</div></div>
+        <div class="rtile"><div class="ri">🙅</div><div class="rt">Never throw things at dogs</div></div>
+        <div class="rtile"><div class="ri">👶</div><div class="rt">Tell an adult if a dog seems hurt</div></div>
+        <div class="rtile"><div class="ri">🐾</div><div class="rt">Give dogs space on the pavement</div></div>
+        <div class="rtile"><div class="ri">💧</div><div class="rt">Leaving water out is kindness</div></div>
+      </div>
+
+      <div class="qwrap">
+        <h3>Quick Quiz</h3><p class="qsub">Answer these to boost your score.</p>
+        <div class="qq" id="kq1"><div class="qqt">A street dog is sleeping on the footpath. What do you do?</div><div class="qopts"><button class="qo" onclick="gQz('kq1',this,false,'kids')">Poke it with a stick</button><button class="qo" onclick="gQz('kq1',this,true,'kids')">Walk around it calmly and leave it alone</button><button class="qo" onclick="gQz('kq1',this,false,'kids')">Shout to your friend across the road</button></div><div class="qfb" id="kq1-fb"></div></div>
+        <div class="qq" id="kq2"><div class="qqt">A dog runs toward you barking. What do you do first?</div><div class="qopts"><button class="qo" onclick="gQz('kq2',this,false,'kids')">Run as fast as you can</button><button class="qo" onclick="gQz('kq2',this,false,'kids')">Yell back at it</button><button class="qo" onclick="gQz('kq2',this,true,'kids')">Stop, stand still, look away</button></div><div class="qfb" id="kq2-fb"></div></div>
+        <div class="qq" id="kq3"><div class="qqt">You want to give a street dog some food. The best way is?</div><div class="qopts"><button class="qo" onclick="gQz('kq3',this,true,'kids')">Place it on the ground and step back</button><button class="qo" onclick="gQz('kq3',this,false,'kids')">Hold it out in your hand</button><button class="qo" onclick="gQz('kq3',this,false,'kids')">Throw it at the dog</button></div><div class="qfb" id="kq3-fb"></div></div>
+      </div>
+    </div>
+
+    <!-- SENIORS -->
+    <div class="wsd-panel" id="panel-seniors">
+
+      <div class="sbar sb">
+        <div><div class="sl">Score</div><div class="sv" id="s-score">0</div></div>
+        <div style="text-align:right"><div class="sl">Status</div><div class="st" id="s-rank">Calm Walker 🧓</div></div>
+      </div>
+
+      <div class="pintro">
+        <h3>A Word Before You Step Out</h3>
+        <p>For older adults, a bite can mean weeks of treatment and real stress. Nearly all street dog bites are avoidable. Learn what triggers them and how to protect yourself every day.</p>
+      </div>
+
+      <div class="slabel"><span class="sbadge d">High Risk Situations</span><div class="sline"></div></div>
+
+      <div class="gcard dc" onclick="gTog(this,'seniors',-10)">
+        <div class="gc-head"><div class="gc-ico di">🦯</div><div><div class="gc-title">Raising a Stick or Umbrella Near a Dog</div><div class="gc-sub">When a walking aid becomes a threat</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>Out of fear, you raise your walking stick or umbrella to shoo a dog away. The dog does not know you are scared. It sees something raised at it, which reads as an attack.</div>
+          <div class="oc bad"><span class="oi">🚨</span>The dog lunges and bites your arm or hand before you can react.</div>
+          <div class="oc tip"><span class="oi">💡</span>Keep your stick pointed down near a dog. If you need space, move it slowly and low to the side. Never raise it above your waist.</div>
+        </div></div>
+      </div>
+
+      <div class="gcard dc" onclick="gTog(this,'seniors',-10)">
+        <div class="gc-head"><div class="gc-ico di">🌅</div><div><div class="gc-title">Unfamiliar Routes on Morning Walks</div><div class="gc-sub">The 5 AM danger zone</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>Early morning, street dogs are most active and most protective of their area. Walking through a lane you do not usually use can set off a territorial response.</div>
+          <div class="oc bad"><span class="oi">🚨</span>A group of dogs follow you barking. You walk faster. Walking faster makes them more aggressive.</div>
+          <div class="oc tip"><span class="oi">💡</span>Stick to familiar routes. Dogs there already know you. If dogs follow you, slow your pace, face slightly away, and walk steadily.</div>
+        </div></div>
+      </div>
+
+      <div class="gcard dc" onclick="gTog(this,'seniors',-10)">
+        <div class="gc-head"><div class="gc-ico di">⚔</div><div><div class="gc-title">Stepping Between Two Fighting Dogs</div><div class="gc-sub">The peacemaker mistake</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>Two dogs are fighting. Out of kindness, you step between them. In the heat of a fight, a dog does not see you as a helper. It sees a third threat and redirects its bite.</div>
+          <div class="oc bad"><span class="oi">🚨</span>You receive a serious bite. This is one of the most common ways senior citizens get bitten.</div>
+          <div class="oc tip"><span class="oi">💡</span>Never step between fighting dogs. Walk away. Dog fights almost always end on their own within seconds.</div>
+        </div></div>
+      </div>
+
+      <div class="slabel"><span class="sbadge c">Everyday Cautions</span><div class="sline"></div></div>
+
+      <div class="gcard cc" onclick="gTog(this,'seniors',0)">
+        <div class="gc-head"><div class="gc-ico ci">🛍</div><div><div class="gc-title">Carrying Fish or Meat from the Market</div><div class="gc-sub">The market walk</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>You walk home with fish or raw meat in an open bag. Dogs can smell this from far away and may follow you or try to grab the bag.</div>
+          <div class="oc bad"><span class="oi">⚠</span>A dog jumps for the bag and scratches or bites you.</div>
+          <div class="oc tip"><span class="oi">💡</span>Always seal raw meat inside a closed bag. If a dog approaches, lower the bag to your side and keep walking without reacting.</div>
+        </div></div>
+      </div>
+
+      <div class="gcard cc" onclick="gTog(this,'seniors',0)">
+        <div class="gc-head"><div class="gc-ico ci">🐶</div><div><div class="gc-title">Walking Past a Mother Dog with Puppies</div><div class="gc-sub">The mother's instinct</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">What happens</span>A mother dog is resting with her puppies near a doorstep. You walk past or bend down to look. A mother protecting her young is the most protective a dog will ever be.</div>
+          <div class="oc bad"><span class="oi">⚠</span>The mother bites without much warning.</div>
+          <div class="oc tip"><span class="oi">💡</span>Cross to the other side of the road. Do not crouch near the puppies. Give the family a wide, respectful gap.</div>
+        </div></div>
+      </div>
+
+      <div class="slabel"><span class="sbadge s">Smart Habits</span><div class="sline"></div></div>
+
+      <div class="gcard sc" onclick="gTog(this,'seniors',20)">
+        <div class="gc-head"><div class="gc-ico si">🚶</div><div><div class="gc-title">Passing a Dog Safely on the Pavement</div><div class="gc-sub">The daily walk formula</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">The safe method</span>Give the dog at least 2 to 3 metres of space by stepping wide around it. Walk at a normal steady pace. Do not stop suddenly, stare, or talk loudly. A dog not given a reason to react will almost never react.</div>
+          <div class="oc good"><span class="oi">✅</span>You walk past calmly. The dog looks up briefly, then goes back to resting.</div>
+          <div class="pchip">+20 points earned</div>
+        </div></div>
+      </div>
+
+      <div class="gcard sc" onclick="gTog(this,'seniors',20)">
+        <div class="gc-head"><div class="gc-ico si">🆘</div><div><div class="gc-title">If You Are Bitten, Here is What to Do</div><div class="gc-sub">Quick response steps</div></div><span class="gc-arr">▼</span></div>
+        <div class="gc-body"><div class="gc-inner">
+          <div class="sbox"><span class="lb">Step by step</span>Wash the wound with soap and water for at least 10 minutes. Do not cover it tightly right away. See a doctor the same day. Do not wait. Most WSD-program dogs are vaccinated, but always follow your doctor's advice.</div>
+          <div class="oc good"><span class="oi">✅</span>You wash the wound, see a doctor that day, and complete the treatment. You recover fully.</div>
+          <div class="pchip">+20 points earned</div>
+        </div></div>
+      </div>
+
+      <div class="slabel"><span class="sbadge s">Daily Reminders</span><div class="sline"></div></div>
+      <div class="rgrid">
+        <div class="rtile"><div class="ri">🧘</div><div class="rt">Stay calm. Panic makes things worse</div></div>
+        <div class="rtile"><div class="ri">🔦</div><div class="rt">Carry a torch for early morning walks</div></div>
+        <div class="rtile"><div class="ri">👀</div><div class="rt">Learn where dogs rest in your lane</div></div>
+        <div class="rtile"><div class="ri">🚫</div><div class="rt">Never raise anything over a dog's head</div></div>
+        <div class="rtile"><div class="ri">🤝</div><div class="rt">Regular walkers become familiar faces to local dogs</div></div>
+        <div class="rtile"><div class="ri">☎</div><div class="rt">Save the WSD helpline in your phone</div></div>
+      </div>
+
+      <div class="qwrap">
+        <h3>Quick Check</h3><p class="qsub">Test what you have just learned.</p>
+        <div class="qq" id="sq1"><div class="qqt">Two street dogs are fighting near your gate. What do you do?</div><div class="qopts"><button class="qo" onclick="gQz('sq1',this,false,'seniors')">Step between them to break it up</button><button class="qo" onclick="gQz('sq1',this,true,'seniors')">Move away and wait. It ends on its own.</button><button class="qo" onclick="gQz('sq1',this,false,'seniors')">Throw water on them</button></div><div class="qfb" id="sq1-fb"></div></div>
+        <div class="qq" id="sq2"><div class="qqt">A dog starts following you on your morning walk. What do you do?</div><div class="qopts"><button class="qo" onclick="gQz('sq2',this,false,'seniors')">Walk faster</button><button class="qo" onclick="gQz('sq2',this,false,'seniors')">Shout and wave your bag</button><button class="qo" onclick="gQz('sq2',this,true,'seniors')">Slow your pace, look slightly away, walk steadily</button></div><div class="qfb" id="sq2-fb"></div></div>
+        <div class="qq" id="sq3"><div class="qqt">You see a mother dog with puppies near the road. What do you do?</div><div class="qopts"><button class="qo" onclick="gQz('sq3',this,false,'seniors')">Stop to look at the puppies up close</button><button class="qo" onclick="gQz('sq3',this,true,'seniors')">Cross to the other side and give them space</button><button class="qo" onclick="gQz('sq3',this,false,'seniors')">Try to pet the mother to show friendliness</button></div><div class="qfb" id="sq3-fb"></div></div>
+      </div>
+
+      <div class="hstrip">
+        <span class="hi">📞</span>
+        <div>
+          <div class="ht">WSD Helpline</div>
+          <div class="hn">+91 89760 22838</div>
+          <div class="htime">Monday to Saturday, 9am to 5pm</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var sc={kids:0,seniors:0};
+  var kr=[[0,'Rookie Paw Pal 🐾'],[20,'Street Aware 👀'],[50,'Calm Walker 🚶'],[80,'Street Smart Champ 🏆']];
+  var sr=[[0,'Calm Walker 🧓'],[20,'Wise Pavement Pro 🌟'],[50,'Neighbourhood Guardian 🛡'],[80,'Community Champion 🏅']];
+  function rank(s,l){var r=l[0][1];for(var i=0;i<l.length;i++){if(s>=l[i][0])r=l[i][1];}return r;}
+  function upd(sec,d){sc[sec]=Math.max(0,sc[sec]+d);document.getElementById(sec==='kids'?'k-score':'s-score').textContent=sc[sec];document.getElementById(sec==='kids'?'k-rank':'s-rank').textContent=rank(sc[sec],sec==='kids'?kr:sr);}
+  window.wsdSw=function(t){['kids','seniors'].forEach(function(x){document.getElementById('tab-'+x).className='wtab';document.getElementById('panel-'+x).classList.remove('active');});document.getElementById('tab-'+t).className='wtab '+(t==='kids'?'kids-active':'seniors-active');document.getElementById('panel-'+t).classList.add('active');};
+  window.gTog=function(c,sec,pts){var was=c.classList.contains('open');c.classList.toggle('open');if(!was&&pts!==0)upd(sec,pts);};
+  window.gQz=function(qid,btn,ok,sec){var q=document.getElementById(qid);q.querySelectorAll('.qo').forEach(function(o){o.disabled=true;});var fb=document.getElementById(qid+'-fb');if(ok){btn.classList.add('correct');fb.textContent='Correct. Well done. +15 points added.';fb.className='qfb show good';upd(sec,15);}else{btn.classList.add('wrong');fb.textContent='Not quite. The right move is always to stay calm and give the dog space.';fb.className='qfb show bad';}};
+})();
+</script>
+</body>
+</html>
